@@ -12,6 +12,7 @@ public interface CandidateService {
     void deleteCandidate(Long id);
     List<CandidateResponseDto> searchByName(String name);
     List<CandidateResponseDto> searchBySkills(List<String> skillNames);
+    CandidateResponseDto searchByEmail(String email);
     CandidateResponseDto addSkillToCandidate(Long candidateId, Long skillId);
     CandidateResponseDto removeSkillFromCandidate(Long candidateId, Long skillId);
     List<CandidateResponseDto> getAllCandidates();

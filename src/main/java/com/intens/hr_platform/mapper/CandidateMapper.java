@@ -1,15 +1,18 @@
 package com.intens.hr_platform.mapper;
 
+import com.intens.hr_platform.dto.candidate.CandidateRequestDto;
 import com.intens.hr_platform.dto.candidate.CandidateResponseDto;
 import com.intens.hr_platform.entity.Candidate;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class CandidateMapper {
 
-    private SkillMapper skillMapper;
+    private final SkillMapper skillMapper;
 
     public CandidateResponseDto toResponseDto(Candidate candidate){
         if(candidate == null){
@@ -26,6 +29,18 @@ public class CandidateMapper {
                 .map(skillMapper::toResponseDto)
                 .collect(Collectors.toSet()));
         return dto;
+    }
 
+    public Candidate toEntity(CandidateRequestDto dto) {
+        if(dto == null) {
+            return null;
+        }
+
+        Candidate candidate = new Candidate();
+        candidate.setFullName(dto.getFullName());
+        candidate.setDateOfBirth(dto.getDateOfBirth());
+        candidate.setEmail(dto.getEmail());
+        candidate.setContactNumber(dto.getContactNumber());
+        return candidate;
     }
 }

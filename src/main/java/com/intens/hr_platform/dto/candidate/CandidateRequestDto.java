@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class CandidateRequestDto {
@@ -25,4 +26,7 @@ public class CandidateRequestDto {
     @Size(min = 9, max = 20, message = "Contact number must be between 9 and 20 characters")
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]+$", message = "Contact number can only contain digits, spaces, hyphens, parentheses, and optional + prefix")
     private String contactNumber;
+
+    @Size(min = 1, max = 10, message = "At least 1 skill must be provided, maximum 10 skills")
+    private List<Long> skillIds;
 }
