@@ -1,5 +1,6 @@
 package com.intens.hr_platform.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import tools.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,5 +62,17 @@ public class GlobalExceptionHandler {
         }
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, String>> handleConstraintViolation(ConstraintViolationException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getConstraintViolations()
+                .forEach(cv -> {
+                    String field = cv.getPropertyPath().toString();
+                    field = field.substring(field.lastIndexOf('.') + 1);
+                    errors.put(field, cv.getMessage());
+                });
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 }
