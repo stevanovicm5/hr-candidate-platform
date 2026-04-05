@@ -1,7 +1,7 @@
 package com.intens.hr_platform.exception;
 
 import jakarta.validation.ConstraintViolationException;
-import tools.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
         Throwable cause = ex.getCause();
 
         if (cause instanceof InvalidFormatException invalidFormatEx) {
-            String fieldPath = invalidFormatEx.getPath().getLast().getPropertyName();
+            String fieldPath = invalidFormatEx.getPath().getLast().getFieldName();
             Class<?> targetType = invalidFormatEx.getTargetType();
 
             if (targetType.equals(LocalDate.class)) {
