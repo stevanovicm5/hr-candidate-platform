@@ -38,7 +38,7 @@ public class CandidateControllerTest {
     @MockitoBean
     private CandidateService candidateService;
 
-    private ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private CandidateResponseDto responseDTO;
     private CandidateRequestDto requestDTO;
