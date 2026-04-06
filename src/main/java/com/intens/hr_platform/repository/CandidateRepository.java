@@ -20,8 +20,6 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("SELECT DISTINCT c FROM Candidate c JOIN c.skills s WHERE s.id = :skillId")
     List<Candidate> findBySkillId(@Param("skillId") Long skillId);
 
-    @Query("SELECT DISTINCT c FROM Candidate c JOIN c.skills s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
-    List<Candidate> findBySkillsContaining(@Param("searchTerm") String searchTerm);
 
     boolean existsByEmailIgnoreCase(String email);
     boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);

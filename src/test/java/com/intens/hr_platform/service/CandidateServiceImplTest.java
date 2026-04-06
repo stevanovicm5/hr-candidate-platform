@@ -181,7 +181,6 @@ public class CandidateServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         verify(candidateRepository, times(1)).findBySkillNames(List.of("java"));
-        verify(candidateRepository, never()).findBySkillsContaining(anyString());
     }
 
     @Test
@@ -194,7 +193,6 @@ public class CandidateServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         verify(candidateRepository, times(1)).findBySkillNames(List.of("java", "spring"));
-        verify(candidateRepository, never()).findBySkillsContaining(anyString());
     }
 
     @Test
