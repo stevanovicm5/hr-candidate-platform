@@ -104,14 +104,28 @@ public class CandidateControllerTest {
     }
 
     @Test
-    void shouldReturn400WhenFullNameIsBlank() throws Exception {
-        requestDTO.setFullName("");
+    void shouldReturn400WhenFullNameIsMissing() throws Exception {
+        // null triggers only @NotBlank, avoiding overlap with @Size/@Pattern messages
+        requestDTO.setFullName(null);
 
         mockMvc.perform(post("/api/candidates")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fullName").value("Full name is required"));
+
+        verifyNoInteractions(candidateService);
+    }
+
+    @Test
+    void shouldReturn400WhenFullNameIsTooShort() throws Exception {
+        requestDTO.setFullName("A");
+
+        mockMvc.perform(post("/api/candidates")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fullName").value("Full name must be between 2 and 50 characters"));
 
         verifyNoInteractions(candidateService);
     }

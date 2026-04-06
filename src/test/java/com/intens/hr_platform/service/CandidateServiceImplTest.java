@@ -5,6 +5,7 @@ import com.intens.hr_platform.dto.candidate.CandidateResponseDto;
 import com.intens.hr_platform.dto.candidate.CandidateUpdateRequestDto;
 import com.intens.hr_platform.entity.Candidate;
 import com.intens.hr_platform.entity.Skill;
+import com.intens.hr_platform.exception.DuplicateResourceException;
 import com.intens.hr_platform.exception.ResourceNotFoundException;
 import com.intens.hr_platform.mapper.CandidateMapper;
 import com.intens.hr_platform.repository.CandidateRepository;
@@ -21,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -83,6 +83,38 @@ public class CandidateServiceImplTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenAddingCandidateWithDuplicateEmail() {
+        when(candidateRepository.existsByEmailIgnoreCase(requestDTO.getEmail())).thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class, () -> candidateService.addCandidate(requestDTO));
+
+        verify(candidateRepository, never()).save(any());
+        verifyNoInteractions(skillRepository, candidateMapper);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAddingCandidateWithDuplicateContactNumber() {
+        when(candidateRepository.existsByEmailIgnoreCase(requestDTO.getEmail())).thenReturn(false);
+        when(candidateRepository.existsByContactNumber(requestDTO.getContactNumber())).thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class, () -> candidateService.addCandidate(requestDTO));
+
+        verify(candidateRepository, never()).save(any());
+        verifyNoInteractions(skillRepository, candidateMapper);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAddingCandidateWithNonExistentSkillId() {
+        requestDTO.setSkillIds(List.of(99L));
+        when(candidateMapper.toEntity(requestDTO)).thenReturn(candidate);
+        when(skillRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> candidateService.addCandidate(requestDTO));
+
+        verify(candidateRepository, never()).save(any());
+    }
+
+    @Test
     void shouldReturnAllCandidates(){
         when(candidateRepository.findAll()).thenReturn(List.of(candidate));
         when(candidateMapper.toResponseDto(candidate)).thenReturn(responseDTO);
@@ -125,6 +157,52 @@ public class CandidateServiceImplTest {
     }
 
     @Test
+    void shouldSearchCandidatesBySingleSkillUsingPartialSearch() {
+        when(candidateRepository.findBySkillsContaining("Java")).thenReturn(List.of(candidate));
+        when(candidateMapper.toResponseDto(candidate)).thenReturn(responseDTO);
+
+        List<CandidateResponseDto> result = candidateService.searchBySkills(List.of("Java"));
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(candidateRepository, times(1)).findBySkillsContaining("Java");
+        verify(candidateRepository, never()).findBySkillNames(anyList());
+    }
+
+    @Test
+    void shouldSearchCandidatesByMultipleSkillsUsingLowercaseNames() {
+        when(candidateRepository.findBySkillNames(List.of("java", "spring"))).thenReturn(List.of(candidate));
+        when(candidateMapper.toResponseDto(candidate)).thenReturn(responseDTO);
+
+        List<CandidateResponseDto> result = candidateService.searchBySkills(List.of("Java", "Spring"));
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(candidateRepository, times(1)).findBySkillNames(List.of("java", "spring"));
+        verify(candidateRepository, never()).findBySkillsContaining(anyString());
+    }
+
+    @Test
+    void shouldSearchCandidateByEmail() {
+        when(candidateRepository.findByEmailIgnoreCase("milan@example.com")).thenReturn(Optional.of(candidate));
+        when(candidateMapper.toResponseDto(candidate)).thenReturn(responseDTO);
+
+        CandidateResponseDto result = candidateService.searchByEmail("milan@example.com");
+
+        assertNotNull(result);
+        assertEquals("milan@example.com", result.getEmail());
+        verify(candidateRepository, times(1)).findByEmailIgnoreCase("milan@example.com");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenSearchingByEmailAndCandidateDoesNotExist() {
+        when(candidateRepository.findByEmailIgnoreCase("unknown@example.com")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> candidateService.searchByEmail("unknown@example.com"));
+        verifyNoInteractions(candidateMapper);
+    }
+
+    @Test
     void shouldAddSkillToCandidate() {
         Skill skill = new Skill();
         skill.setId(1L);
@@ -151,6 +229,17 @@ public class CandidateServiceImplTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenAddingNonExistentSkillToCandidate() {
+        when(candidateRepository.findById(1L)).thenReturn(Optional.of(candidate));
+        when(skillRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> candidateService.addSkillToCandidate(1L, 99L));
+
+        verify(candidateRepository, never()).save(any());
+    }
+
+    @Test
     void shouldRemoveSkillFromCandidate() {
         Skill skill = new Skill();
         skill.setId(1L);
@@ -169,6 +258,27 @@ public class CandidateServiceImplTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenRemovingSkillFromNonExistentCandidate() {
+        when(candidateRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> candidateService.removeSkillFromCandidate(99L, 1L));
+
+        verify(candidateRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenRemovingNonExistentSkillFromCandidate() {
+        when(candidateRepository.findById(1L)).thenReturn(Optional.of(candidate));
+        when(skillRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> candidateService.removeSkillFromCandidate(1L, 99L));
+
+        verify(candidateRepository, never()).save(any());
+    }
+
+    @Test
     void shouldUpdateCandidate() {
         CandidateUpdateRequestDto updateDTO = new CandidateUpdateRequestDto();
         updateDTO.setFullName("Slobodan Stevanovic");
@@ -182,6 +292,34 @@ public class CandidateServiceImplTest {
         assertNotNull(result);
         assertEquals("Slobodan Stevanovic", candidate.getFullName());
         verify(candidateRepository, times(1)).save(candidate);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingCandidateWithDuplicateEmail() {
+        CandidateUpdateRequestDto updateDTO = new CandidateUpdateRequestDto();
+        updateDTO.setEmail("duplicate@example.com");
+
+        when(candidateRepository.findById(1L)).thenReturn(Optional.of(candidate));
+        when(candidateRepository.existsByEmailIgnoreCaseAndIdNot("duplicate@example.com", 1L)).thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class,
+                () -> candidateService.updateCandidate(1L, updateDTO));
+
+        verify(candidateRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingCandidateWithDuplicateContactNumber() {
+        CandidateUpdateRequestDto updateDTO = new CandidateUpdateRequestDto();
+        updateDTO.setContactNumber("+381631111111");
+
+        when(candidateRepository.findById(1L)).thenReturn(Optional.of(candidate));
+        when(candidateRepository.existsByContactNumberAndIdNot("+381631111111", 1L)).thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class,
+                () -> candidateService.updateCandidate(1L, updateDTO));
+
+        verify(candidateRepository, never()).save(any());
     }
 
     @Test
