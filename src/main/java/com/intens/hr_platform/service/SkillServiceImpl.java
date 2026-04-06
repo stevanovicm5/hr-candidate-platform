@@ -2,21 +2,26 @@ package com.intens.hr_platform.service;
 
 import com.intens.hr_platform.dto.skill.SkillRequestDto;
 import com.intens.hr_platform.dto.skill.SkillResponseDto;
+import com.intens.hr_platform.entity.Candidate;
 import com.intens.hr_platform.entity.Skill;
 import com.intens.hr_platform.exception.DuplicateResourceException;
 import com.intens.hr_platform.exception.ResourceNotFoundException;
 import com.intens.hr_platform.mapper.SkillMapper;
+import com.intens.hr_platform.repository.CandidateRepository;
 import com.intens.hr_platform.repository.SkillRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class SkillServiceImpl implements SkillService{
 
     private final SkillRepository skillRepository;
+    private final CandidateRepository candidateRepository;
     private final SkillMapper skillMapper;
 
     @Override
@@ -51,6 +56,11 @@ public class SkillServiceImpl implements SkillService{
     public void deleteSkill(Long id) {
         Skill skill = skillRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Skill with id: " + id + " not found"));
+
+        List<Candidate> candidatesWithSkill = candidateRepository.findBySkillId(id);
+        candidatesWithSkill.forEach(candidate -> candidate.getSkills().remove(skill));
+        candidateRepository.saveAll(candidatesWithSkill);
+
         skillRepository.delete(skill);
     }
 

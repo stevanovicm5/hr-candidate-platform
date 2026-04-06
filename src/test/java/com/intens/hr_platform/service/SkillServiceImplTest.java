@@ -2,10 +2,12 @@ package com.intens.hr_platform.service;
 
 import com.intens.hr_platform.dto.skill.SkillRequestDto;
 import com.intens.hr_platform.dto.skill.SkillResponseDto;
+import com.intens.hr_platform.entity.Candidate;
 import com.intens.hr_platform.entity.Skill;
 import com.intens.hr_platform.exception.DuplicateResourceException;
 import com.intens.hr_platform.exception.ResourceNotFoundException;
 import com.intens.hr_platform.mapper.SkillMapper;
+import com.intens.hr_platform.repository.CandidateRepository;
 import com.intens.hr_platform.repository.SkillRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,9 @@ public class SkillServiceImplTest {
 
     @Mock
     private SkillRepository skillRepository;
+
+    @Mock
+    private CandidateRepository candidateRepository;
 
     @Mock
     private SkillMapper skillMapper;
@@ -149,10 +154,30 @@ public class SkillServiceImplTest {
     @Test
     void shouldDeleteSkill() {
         when(skillRepository.findById(1L)).thenReturn(Optional.of(skill));
+        when(candidateRepository.findBySkillId(1L)).thenReturn(List.of());
 
         skillService.deleteSkill(1L);
 
         verify(skillRepository, times(1)).delete(skill);
+    }
+
+    @Test
+    void shouldRemoveSkillFromCandidatesBeforeDeletingSkill() {
+        Candidate candidate = new Candidate();
+        candidate.setId(10L);
+        candidate.setFullName("Milan Stevanovic");
+        candidate.setEmail("milan@example.com");
+        candidate.setContactNumber("+381621234567");
+        candidate.getSkills().add(skill);
+
+        when(skillRepository.findById(1L)).thenReturn(Optional.of(skill));
+        when(candidateRepository.findBySkillId(1L)).thenReturn(List.of(candidate));
+
+        skillService.deleteSkill(1L);
+
+        verify(candidateRepository, times(1)).saveAll(List.of(candidate));
+        verify(skillRepository, times(1)).delete(skill);
+        assertEquals(0, candidate.getSkills().size());
     }
 
     @Test

@@ -92,6 +92,20 @@ public class CandidateControllerTest {
     }
 
     @Test
+    void shouldAddCandidateWithEmptySkillList() throws Exception {
+        requestDTO.setSkillIds(List.of());
+        when(candidateService.addCandidate(any(CandidateRequestDto.class))).thenReturn(responseDTO);
+
+        mockMvc.perform(post("/api/candidates")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fullName").value("Milan Stevanovic"));
+
+        verify(candidateService, times(1)).addCandidate(any(CandidateRequestDto.class));
+    }
+
+    @Test
     void shouldReturn400WhenAddingDuplicateCandidate() throws Exception {
         when(candidateService.addCandidate(any(CandidateRequestDto.class)))
                 .thenThrow(new DuplicateResourceException("Candidate already exists"));

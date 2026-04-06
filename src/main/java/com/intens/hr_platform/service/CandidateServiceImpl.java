@@ -12,11 +12,13 @@ import com.intens.hr_platform.repository.CandidateRepository;
 import com.intens.hr_platform.repository.SkillRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CandidateServiceImpl implements CandidateService{
 
     private final CandidateRepository candidateRepository;
@@ -94,12 +96,8 @@ public class CandidateServiceImpl implements CandidateService{
 
     @Override
     public List<CandidateResponseDto> searchBySkills(List<String> skillNames) {
-//        if it has 1 skill give partial search
-        if (skillNames.size() == 1) {
-            return candidateRepository.findBySkillsContaining(skillNames.getFirst())
-                    .stream()
-                    .map(candidateMapper::toResponseDto)
-                    .toList();
+        if (skillNames == null || skillNames.isEmpty()) {
+            return List.of();
         }
 
         List<String> lowerCaseSkills = skillNames.stream()

@@ -27,6 +27,6 @@ public class CandidateRequestDto {
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]+$", message = "Contact number can only contain digits, spaces, hyphens, parentheses, and optional + prefix")
     private String contactNumber;
 
-    @Size(min = 1, max = 10, message = "At least 1 skill must be provided, maximum 10 skills")
+    @Size(max = 10, message = "Maximum 10 skills can be provided")
     private List<Long> skillIds;
 }

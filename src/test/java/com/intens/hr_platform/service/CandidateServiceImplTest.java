@@ -83,6 +83,21 @@ public class CandidateServiceImplTest {
     }
 
     @Test
+    void shouldAddCandidateWithoutInitialSkills() {
+        requestDTO.setSkillIds(List.of());
+
+        when(candidateMapper.toEntity(requestDTO)).thenReturn(candidate);
+        when(candidateRepository.save(candidate)).thenReturn(candidate);
+        when(candidateMapper.toResponseDto(candidate)).thenReturn(responseDTO);
+
+        CandidateResponseDto result = candidateService.addCandidate(requestDTO);
+
+        assertNotNull(result);
+        verifyNoInteractions(skillRepository);
+        verify(candidateRepository, times(1)).save(candidate);
+    }
+
+    @Test
     void shouldThrowExceptionWhenAddingCandidateWithDuplicateEmail() {
         when(candidateRepository.existsByEmailIgnoreCase(requestDTO.getEmail())).thenReturn(true);
 
@@ -157,16 +172,16 @@ public class CandidateServiceImplTest {
     }
 
     @Test
-    void shouldSearchCandidatesBySingleSkillUsingPartialSearch() {
-        when(candidateRepository.findBySkillsContaining("Java")).thenReturn(List.of(candidate));
+    void shouldSearchCandidatesBySingleSkillUsingExactMatch() {
+        when(candidateRepository.findBySkillNames(List.of("java"))).thenReturn(List.of(candidate));
         when(candidateMapper.toResponseDto(candidate)).thenReturn(responseDTO);
 
         List<CandidateResponseDto> result = candidateService.searchBySkills(List.of("Java"));
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(candidateRepository, times(1)).findBySkillsContaining("Java");
-        verify(candidateRepository, never()).findBySkillNames(anyList());
+        verify(candidateRepository, times(1)).findBySkillNames(List.of("java"));
+        verify(candidateRepository, never()).findBySkillsContaining(anyString());
     }
 
     @Test
