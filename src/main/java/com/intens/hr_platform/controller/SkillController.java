@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/skills")
+@RequestMapping("/api/skills")
 @AllArgsConstructor
 @Tag(name = "Skills", description = "Skill management API")
 public class SkillController {

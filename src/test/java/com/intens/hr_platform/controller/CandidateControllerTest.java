@@ -245,78 +245,77 @@ public class CandidateControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    void shouldSearchCandidatesByName() throws Exception {
-        when(candidateService.searchByName("Milan")).thenReturn(List.of(responseDTO));
+     @Test
+     void shouldSearchCandidatesByName() throws Exception {
+         when(candidateService.searchByName("Milan")).thenReturn(List.of(responseDTO));
 
-        mockMvc.perform(get("/api/candidates/search")
-                        .param("name", "Milan"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].fullName").value("Milan Stevanovic"));
+         mockMvc.perform(get("/api/candidates/search")
+                         .param("name", "Milan"))
+                 .andExpect(status().isOk())
+                 .andExpect(jsonPath("$[0].fullName").value("Milan Stevanovic"));
 
-        verify(candidateService, times(1)).searchByName("Milan");
-    }
+         verify(candidateService, times(1)).searchByName("Milan");
+     }
 
-    @Test
-    void shouldReturn400WhenSearchNameIsBlank() throws Exception {
-        mockMvc.perform(get("/api/candidates/search")
-                        .param("name", ""))
-                .andExpect(status().isBadRequest());
+     @Test
+     void shouldReturn400WhenSearchNameIsBlank() throws Exception {
+         mockMvc.perform(get("/api/candidates/search")
+                         .param("name", ""))
+                 .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(candidateService);
-    }
+         verifyNoInteractions(candidateService);
+     }
 
-    @Test
-    void shouldSearchCandidatesBySkills() throws Exception {
-        when(candidateService.searchBySkills(List.of("Java", "Spring"))).thenReturn(List.of(responseDTO));
+     @Test
+     void shouldSearchCandidatesBySkills() throws Exception {
+         when(candidateService.searchBySkills(List.of("Java", "Spring"))).thenReturn(List.of(responseDTO));
 
-        mockMvc.perform(get("/api/candidates/search/skills")
-                        .param("skills", "Java", "Spring"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].fullName").value("Milan Stevanovic"));
+         mockMvc.perform(get("/api/candidates/search")
+                         .param("skills", "Java", "Spring"))
+                 .andExpect(status().isOk())
+                 .andExpect(jsonPath("$[0].fullName").value("Milan Stevanovic"));
 
-        verify(candidateService, times(1)).searchBySkills(List.of("Java", "Spring"));
-    }
+         verify(candidateService, times(1)).searchBySkills(List.of("Java", "Spring"));
+     }
 
-    @Test
-    void shouldReturn400WhenSkillsParamIsMissing() throws Exception {
-        mockMvc.perform(get("/api/candidates/search/skills"))
-                .andExpect(status().isBadRequest());
+     @Test
+     void shouldReturn400WhenNoSearchParamProvided() throws Exception {
+         mockMvc.perform(get("/api/candidates/search"))
+                 .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(candidateService);
-    }
+         verifyNoInteractions(candidateService);
+     }
 
-    @Test
-    void shouldSearchCandidateByEmail() throws Exception {
-        when(candidateService.searchByEmail("milan@example.com")).thenReturn(responseDTO);
+     @Test
+     void shouldSearchCandidateByEmail() throws Exception {
+         when(candidateService.searchByEmail("milan@example.com")).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/api/candidates/search/email")
-                        .param("email", "milan@example.com"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("milan@example.com"));
+         mockMvc.perform(get("/api/candidates/search")
+                         .param("email", "milan@example.com"))
+                 .andExpect(status().isOk())
+                 .andExpect(jsonPath("$.email").value("milan@example.com"));
 
-        verify(candidateService, times(1)).searchByEmail("milan@example.com");
-    }
+         verify(candidateService, times(1)).searchByEmail("milan@example.com");
+     }
 
-    @Test
-    void shouldReturn400WhenSearchEmailIsBlank() throws Exception {
-        mockMvc.perform(get("/api/candidates/search/email")
-                        .param("email", ""))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email").value("Email cannot be blank"));
+     @Test
+     void shouldReturn400WhenSearchEmailIsBlank() throws Exception {
+         mockMvc.perform(get("/api/candidates/search")
+                         .param("email", ""))
+                 .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(candidateService);
-    }
+         verifyNoInteractions(candidateService);
+     }
 
-    @Test
-    void shouldReturn400WhenSearchEmailHasInvalidFormat() throws Exception {
-        mockMvc.perform(get("/api/candidates/search/email")
-                        .param("email", "invalid-email"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email").value("Email format is invalid"));
+     @Test
+     void shouldReturn400WhenSearchEmailHasInvalidFormat() throws Exception {
+         mockMvc.perform(get("/api/candidates/search")
+                         .param("email", "invalid-email"))
+                 .andExpect(status().isBadRequest())
+                 .andExpect(jsonPath("$.error").value("Email format is invalid"));
 
-        verifyNoInteractions(candidateService);
-    }
+         verifyNoInteractions(candidateService);
+     }
 
     @Test
     void shouldAddSkillToCandidate() throws Exception {
